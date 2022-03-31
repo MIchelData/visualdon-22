@@ -157,29 +157,4 @@ let z = d3.scaleSqrt()
   return GDPtrans;
 
   }
-  function esperancetrans(){
-    const esperancedevieTrans = espereanceVie.map((d) =>{
-      let SI = typeof d["2021"] === 'string' || d["2021"] instanceof String ? d["2021"].slice(-1) : d["2021"];
-      let number = typeof d["2021"] === 'string' || d["2021"] instanceof String ? parseFloat(d["2021"].slice(0,-1)) : d["2021"];
-     // Selon la valeur SI, multiplier par la puissance
-     switch (SI) {
-         case 'M': {
-             return {  "": Math.pow(10, 6) * number};
-             break;
-         }
-         case 'B': {
-             return {  "GDP": Math.pow(10, 9) * number};
-             break;
-         }
-         case 'k': {
-             return {  "GDP": Math.pow(10, 3) * number};
-             break;
-         }
-         default: {
-             return {  "GDP": number};
-             break;
-         }
-     }
-   })
-  return esperancedevieTrans;
-  }
+ 
