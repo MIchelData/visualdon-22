@@ -16,6 +16,7 @@ module.exports = {
     },
     module: {
         rules: [
+            {test: /\.json$/, loader: 'json-loader'},
             { test: /\.js$/, loader: 'babel-loader', exclude: /node_modules/ },
             {test: /\.csv$/, loader: 'csv-loader', options: {
                     dynamicTyping: true,

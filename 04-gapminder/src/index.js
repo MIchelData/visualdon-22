@@ -1,15 +1,20 @@
 import * as d3 from 'd3'
 import {espereanceVie, revenuparPersonne, populationTotal} from '../data/life_expectancy_years.csv'
 
+
  import file from '../data/population_total.csv'
   import gdp from '../data/income_per_person_gdppercapita_ppp_inflation_adjusted.csv'
   import lifeexpectency from '../data/life_expectancy_years.csv'
  import population from '../data/population_total.csv'
+ //import worldmap from '../data/worldmap.json';
+ 
 
 //console.log("la pop est trans",popTransformed);
 
 console.log("file2",gdp);
 console.log("life", lifeexpectency);
+//console.log("world map", worldmap);
+
 
 let legdp = gdptrans();
 let onlygdp = new Array();
@@ -158,3 +163,158 @@ let z = d3.scaleSqrt()
 
   }
  
+
+  //Ex Cartographique
+
+  let requestOptions = {
+    method: 'GET',
+  };
+
+  const life2021country = lifeexpectency.map((d, i)=>{
+    return {"pays": d['country'], "esperanceVie": d['2021']};
+  })
+  console.log("life + pays 2021", life2021country);
+
+  let width3 = 960 ,
+  height3 = 480;
+
+  const path = d3.geoPath();
+
+  const projection = d3.geoMercator()
+  .scale(125)
+  .center([0,30])
+  .translate([width3/2, height3/2]);
+  
+  
+    
+
+ const svg2 = d3.select('#map').append("svg")
+ .attr("id", "svg")
+ .attr("class", "Red")
+   .attr("width", width3)
+  .attr("height", height3);
+
+  const deps = svg2.append("g");
+
+
+
+// let quantile = d3.scaleQuantile()
+//   .domain([0, d3.max(life2021country, e=> +e.esperanceVie)])
+//   .range(d3.range(10));
+
+// let colorScale = d3.scaleThreshold()
+//   .domain([100000, 1000000, 10000000, 30000000, 100000000, 500000000])
+//   .range(d3.schemeBlues[7]);
+
+
+
+  
+
+let current
+d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson").then(function(geojson){
+  deps.selectAll("path")
+  .data(geojson.features)
+  .enter()
+  .append("path")
+  .attr("d", path)
+  .attr('name', d => "d" + d.name)
+   .attr("fill", function (d,i) {
+     life2021country.forEach(element => {
+       if(element['pays']==d['properties']['name']){
+          return current = element['esperanceVie']
+         
+       }
+      
+     });
+     
+    // console.log(n);
+    let n = Math.round((current-50)/4);
+    console.log("current", n);
+     return d3.schemeGreens[9][n];
+    //return d3.schemeGreens[6][n];
+    // console.log("ghgh", d['properties']['name']);
+        
+          
+      })
+      
+});
+
+
+let legend = svg2.append('g')
+.attr('transform', 'translate(525, 150)')
+.attr('id', 'legend');
+
+for(let i=0; i<9; i++){
+ legend.append('svg:rect')
+ .attr('y', i*20+150+'px')
+ .attr('height', '20px')
+ .attr('width', '20px')
+ .attr('x', '-400px')
+ .style('fill', d3.schemeGreens[9][i])
+ .style('stroke', 'black');
+
+ legend.append("text").text((i*4)+50)
+ .attr('y', i*20+165+'px')
+ .attr('x', '-370px')
+}
+
+path.projection(projection)
+
+
+
+  async function chargeGeo(pays){
+  fetch("https://api.geoapify.com/v1/geocode/search?country="+pays+"&apiKey=3c268728ab1d4198ab8adf947e58b03a", requestOptions)
+ .then (response => prov = {"lon": response['features'][0]['properties']['lon'], "lat": response['features'][0]['properties']['lon']});
+ return prov;
+  //console.log("long, lat", result['features'][0]['properties']['lon']);
+  }
+  
+
+  //Topogramme //(pas fait)
+  //d3.cartogram = function() {
+
+    function carto(topology, geometries) {
+      // copy it first
+      topology = copy(topology);
+  let tf = transformer(topology.transform),x,y,len1,i1,out1,len2=topology.arcs.length,i2=0,
+  projectedArcs = new Array(len2);
+  while(i2<len2){
+    x = 0;
+    y = 0;
+    len1 = topology.arcs[i2].length;
+    i1 = 0;
+    out1 = new Array(len1);
+    while(i1<len1){
+      topology.arcs[i2][i1][0] = (x += topology.arcs[i2][i1][0]);
+      topology.arcs[i2][i1][1] = (y += topology.arcs[i2][i1][1]);
+      out1[i1] = projection(tf(topology.arcs[i2][i1]));
+      i1++;
+    }
+    projectedArcs[i2++]=out1;
+    
+  }
+  // path with identity projection
+ // let path = d3.geo.path()
+ // .projection(null);
+
+let objects = object(projectedArcs, {type: "GeometryCollection", geometries: geometries})
+    .geometries.map(function(geom) {  
+      return {
+        type: "Feature",
+        id: geom.id,
+        properties: properties.call(null, geom, topology),
+        geometry: geom
+      };
+    });
+
+let values = objects.map(value),
+    totalValue = d3.sum(values);
+
+// no iterations; just return the features
+if (iterations <= 0) {
+  return objects;
+}
+    }
+ // }
+    
+
