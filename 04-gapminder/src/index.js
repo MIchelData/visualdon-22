@@ -6,6 +6,8 @@ import {espereanceVie, revenuparPersonne, populationTotal} from '../data/life_ex
   import gdp from '../data/income_per_person_gdppercapita_ppp_inflation_adjusted.csv'
   import lifeexpectency from '../data/life_expectancy_years.csv'
  import population from '../data/population_total.csv'
+import { easeCubic } from 'd3'
+import { easeLinear } from 'd3'
  //import worldmap from '../data/worldmap.json';
  
 
@@ -270,7 +272,197 @@ path.projection(projection)
   }
   
 
-  //Topogramme //(pas fait)
+  //Topogramme //(pas fait)*************************************************************************************************************
+
+// Exercice gapminder
+
+
+function tabgapminderyear(year){
+  let poptransanne= datacleanyear(population,year);
+  let gdptransanne= datacleanyear(gdp, year);
+  let gdpgoodyear = new Array();
+  let lifegoodyear = new Array();
+  let tabgapminder = poptransanne.map((d, i)=>{
+   gdptransanne.forEach(element => {
+    if(d.country == element.country ){
+       gdpgoodyear[i]= element.num; 
+    }
+    
+   });
+  lifeexpectency.forEach(element => {
+    if(d.country == element.country ){
+      lifegoodyear[i]= element[year]; 
+   }
+  });
+  
+  return {pop: d.num, gdp: gdpgoodyear[i], life: lifegoodyear[i]} 
+    
+       
+  });
+  return tabgapminder
+ 
+}
+
+tabgapminderyear(1980);
+
+
+
+
+
+let margin2 = {top: 10, right: 20, bottom: 30, left: 50},
+width2 = 500 - margin2.left - margin2.right,
+height2 = 420 - margin2.top - margin2.bottom;
+
+let svg3 = d3.select("body")
+.append("svg")
+.attr("width",width2 + margin2.left + margin2.right)
+.attr("height", height2+ margin2.top + margin2.bottom)
+.append("g")
+.attr("transform",
+       "translate(" + margin.left + "," + margin.top + ")");
+
+       let x2 = d3.scaleLinear()
+       .domain([0, 100000])
+       .range([ 0, width]);
+       svg3.append("g")
+       .attr("transform", "translate(0," + height + ")")
+       .call(d3.axisBottom(x));
+       
+       let y2 = d3.scaleLinear()
+         .domain([0, 90])
+         .range([height, 0]);
+         svg3.append("g")
+         .call(d3.axisLeft(y));
+        
+       
+       let z2 = d3.scaleSqrt()
+       .domain([1000, 4000000000])
+       .range([1,40]);
+      let datagapminderallyears = new Array()
+      for(let i=1800; i<2050; i++){
+        datagapminderallyears[i-1800] = tabgapminderyear(i);
+      }
+      console.log("le vizir", datagapminderallyears);
+       let currentyear = 1800;
+     let datagapminder =  tabgapminderyear(currentyear); 
+     let n =0;
+          let t = d3.transition()
+          .duration(200)
+          .ease(easeLinear)
+
+function updateData(newdata){
+  svg3.selectAll('circle').remove();
+  svg3
+  .append("g")
+  .selectAll("circle")
+  .data(newdata)
+ .enter()
+ .append('circle')
+//  .transition(d3.transition()
+//  .duration(500)
+//  .ease(d3.easeLinear))
+  .attr("cx", function (d){return x2(d.gdp);})
+ .attr("cy", function (d){return y2(d.life);})
+ .attr("r", function (d){return z2(d.pop);})
+ .attr("fill", "red")
+ .style("opacity", "0.5");
+
+// ** Je ne suis pas parvenu a faire les transitions; les cercles ne prenaient pas leur dernier emplacement comme point de départ
+
+//  update => update.transition(d3.transition().duration(500)
+//  .ease(d3.easeLinear))
+//  .attr("cx", function (d){return x2(d.gdp);})
+//  .attr("cy", function (d){return y2(d.life);})
+//  .attr("r", function (d){return z2(d.pop);}),
+//  exit=> exit.remove())
+//  .transition(t)
+//  .attr("cy", function (d){return y2(d.life);})
+//  .attr("r", function (d){return z2(d.pop);});
+
+}
+let nIntervId;
+
+function stop() {
+  clearInterval(nIntervId);
+  nIntervId = null;
+      }
+
+function animate() {
+  // regarder si l'intervalle a été déjà démarré
+  if (!nIntervId) {
+    nIntervId = setInterval(play, 500);
+  }
+  }
+let i=0;
+function play() {
+  if(i == datagapminderallyears.length-1) {
+  i = 0;
+  } else {
+  i++;
+  }
+  d3.select('#date').text(i+1800)
+  updateData(datagapminderallyears[i]);
+}
+document.getElementById("play").addEventListener("click", animate);
+	document.getElementById("stop").addEventListener("click", stop);
+         
+       
+       
+        d3.scaleSqrt(totalpop)
+        .domain([1000, 4000000])
+        .range([1,40])
+
+        console.log("tabcomplet", tabcomplet);
+
+
+        function datacleanyear(data, year){
+          const popTransformed = data.map(d => {
+           // Trouver le format SI (M, B, k)
+           let SI = typeof d[year] === 'string' || d[year] instanceof String ? d[year].slice(-1) : d[year];
+           // Extraire la partie numérique
+           let number = typeof d[year] === 'string' || d[year] instanceof String ? parseFloat(d[year].slice(0,-1)) : d[year];
+           // Selon la valeur SI, multiplier par la puissance
+           switch (SI) {
+               case 'M': {
+                   return { "country": d.country, "num": Math.pow(10, 6) * number};
+                   break;
+               }
+               case 'B': {
+                   return { "country": d.country, "num": Math.pow(10, 9) * number};
+                   break;
+               }
+               case 'k': {
+                   return { "country": d.country, "num": Math.pow(10, 3) * number};
+                   break;
+               }
+               default: {
+                   return { "country": d.country, "num": number};
+                   break;
+               }
+           }
+         })
+         return popTransformed;
+          }
+
+
+
+//console.log("poptranseachyears", poptranseachyers(1980))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   //d3.cartogram = function() {
 
     function carto(topology, geometries) {
